@@ -1,0 +1,68 @@
+* HaploSurvival for Haplotype effects for Suvival data and Competing risks 
+
+Does not run currently on new version of R due to changes in R, but should run
+on older versions like R 3.0
+
+
+** Installation
+
+The development version may be installed directly from github
+(requires [[http://cran.r-project.org/bin/windows/Rtools/][Rtools]] on windows
+and [[http://cran.r-project.org/bin/macosx/tools/][development tools]] (+Xcode) for Mac OS X):
+#+BEGIN_SRC R :exports both :eval never
+devtools::install_github("scheike/HaploSurvival")
+#+END_SRC
+or download the source 
+#+BEGIN_EXAMPLE
+git@github.com:scheike/HaploSurvival.git
+#+END_EXAMPLE
+
+** Citation
+
+To cite the =HaploSurvival= package please use one of the following references
+
+#+BEGIN_QUOTE
+  Scheike, T. H. and Maiers, M.~J. and Rocha, V. and Zhang, M.~J.,
+  Competing risks with missing covariates: Effect of haplotypematch on BMT patients,
+  Lifetime Data Anal., 2013, 19, 19-32.
+
+  Thomas Scheike and T Martinussen and MJ Zhang,
+  The Additive Risk Model for Estimation of Effect of Haplotype Match in BMT Studies,
+  Scandinavian Journal of Statistics,
+  2011, 38, 3, 409--423.
+#+END_QUOTE
+
+
+BibTeX:
+#+BEGIN_EXAMPLE
+@Article{
+  author        = {Scheike, T. H. and Maiers, M.~J. and Rocha, V. and Zhang, M.~J.},
+  title         = {Competing risks with missing covariates: Effect of haplotypematch on BMT patients},
+  journal       = {Lifetime Data Anal.},
+  year          = {2013},
+  volume        = {19},
+  pages         = {19-32}
+}
+
+@Article{
+  author    = {Thomas Scheike and T Martinussen and MJ Zhang},
+  title     = {The Additive Risk Model for Estimation of Effect of Haplotype Match in BMT Studies},
+  journal   = {Scandinavian Journal of Statistics},
+  year      = {2011},
+  volume    = {38},
+  number    = {3},
+  pages     = {409--423},
+  issn      = {0303-6898}
+}
+
+#+END_EXAMPLE
+       
+** Examples
+
+#+BEGIN_SRC R :exports both :file timereg1.png :cache yes
+  library(HaploSurvival)
+  
+
+#+END_SRC
+
+
