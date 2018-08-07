@@ -23,6 +23,7 @@ test
 *.log
 *~
 *.out
+first 
 *.swp
 *.nav
 *.toc
