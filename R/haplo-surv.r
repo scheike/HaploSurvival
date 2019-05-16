@@ -1,8 +1,71 @@
+haploDes <- function(X,Z,nPossHaps,oh,nxh,nzh,designX,designZ)
+{# {{{
+antpers <- nrow(X[,drop=FALSE])
+nall <- sum(nPossHaps)
+Xall <- matrix(0,nall,nxh)
+Zall <- matrix(0,nall,nzh)
+indexpersnph  <-  indexpersallH <- rep(0,antpers)
+
+c1  <-  k <- 1
+for (i in 1:antpers)
+{
+   indexpersnph[i]=c1; first=0; 
+   xi <- X[i,]; zi <- Z[i,]
+
+    for (j in 1:nPossHaps[i]) {
+       haplo1 <- oh[c1]; 
+       haplo2  <- oh[c1+1]; 
+       Xall[k,]  <- designX(xi,zi,c(haplo1,haplo2))
+       Zall[k,]  <- designZ(xi,zi,c(haplo1,haplo2))
+       if (first==0) {indexpersallH[i]=k; first=1;}
+       c1 <- c1+2
+       k <- k+1
+    }
+
+}
+return(list(Xall=Xall,Zall=Zall,indexpers=indexpersnph-1,
+                                indexpersallH=indexpersallH-1))
+}# }}}
+
+haploDesMatch <- function(X,Z,nPossHaps,oh,nxh,nzh,designX,designZ)
+{# {{{
+antpers <- nrow(X[,drop=FALSE])
+nall <- sum(nPossHaps^2)
+Xall <- matrix(0,nall,nxh)
+Zall <- matrix(0,nall,nzh)
+indexpersnph  <-  indexpersallH <- rep(0,antpers)
+
+  k=1;c1D=1; 
+  for (i in 1:antpers) {
+   indexpersnph[i]=c1D; first=0; 
+   xi <- X[i,]; zi <- Z[i,]
+
+    for (jD in 1:nPossHaps[i]) { 
+       haploD1=oh[c1D]; haploD2=oh[c1D+1]; 
+
+       if (jD==1) c1Dstart=c1D;  
+       c1P=c1Dstart; 
+       for (jP in 1:nPossHaps[i]) {
+         haploP1=oh[c1P]; haploP2=oh[c1P+1]; 
+         Xall[k,] <- designX(xi,zi,c(haploD1,haploD2),c(haploP1,haploP2)); 
+         Zall[k,] <- designZ(xi,zi,c(haploD1,haploD2),c(haploP1,haploP2)); 
+         if (first==0) {indexpersallH[i]=k; first=1;}
+         c1P <- c1P+2; k  <- k+1; 
+       }
+       c1D  <-  c1D+2;  
+    }
+  }
+
+return(list(Xall=Xall,Zall=Zall,indexpers=indexpersnph-1,
+                                indexpersallH=indexpersallH-1))
+}# }}}
+
+
 haplo.surv<- function (formula = formula(data),data=sys.parent(),
     designfuncX,designfuncZ, beta = 0, match=FALSE, 
     Nit = 10, detail = 0, start.time = 0, max.time = NULL, id = NULL, n.sim = 500, 
     geno.type = NULL, geno.setup=NULL, haplo.freq = NULL,
-    fix.beta = 0, fix.haplofreq = 0, two.stage = 0, weighted.test = 0,
+    fix.beta = 0, fix.haplofreq = 1, two.stage = 1, weighted.test = 0,
     step = 1, lev.marq=1, min.lev.marq=0,
     haplo.design=NULL,haplo.baseline=NULL,alpha=NULL,resample.iid=1,
     covnamesX=NULL,covnamesZ=NULL)
@@ -192,7 +255,7 @@ dimzih<-length(zih)
 if (attr(m[,1],"type")=="right") { ## {{{ sorting for right censored case
  ot<-order(time2,status==0); # order in time, status=1 first for ties
  time2<-time2[ot]; status<-status[ot]
- X<-X[ot,]; Z<-Z[ot,]
+ X<-X[ot,,drop=FALSE]; Z<-Z[ot,,drop=FALSE]
  clusters<-survs$clusters<-survs$clusters[ot]
  index.dtimes<-which(time2 %in% times)-1; 
 
@@ -204,7 +267,18 @@ if (attr(m[,1],"type")=="right") { ## {{{ sorting for right censored case
 }
 ## }}}
 
+###print(head(X)); print(head(Z))
+
+if (match==FALSE) 
+hapXZ <- haploDes(X,Z,nPossHaps,oh,dimxih,dimzih,designfuncX,designfuncZ)
+else hapXZ <- haploDesMatch(X,Z,nPossHaps,oh,dimxih,dimzih,designfuncX,designfuncZ)
+
+###print(head(hapXZ$X)); print(head(hapXZ$Z)); print(dim(hapXZ$X)); print(dim(hapXZ$Z)); 
+###print(c(dimxih,dimzih,two.stage,fix.haplofreq)); 
+
 ###dyn.load("haplo.so")
+
+
 
 if (match==FALSE) {
 
@@ -216,34 +290,33 @@ nparout <- .C("simplehaplosurvdes",
  as.double(time2), as.double(beta),  as.integer(Nit), as.double(cumint), as.double(vcum),
  as.double(loglike), as.double(Iinv), as.double(Varbeta), as.integer(detail), as.integer(sim), 
  as.integer(antsim), as.double(Rvcu), as.double(RVarbeta), as.double(test), as.double(testOBS),
- as.double(Ut), as.double(simUt), as.double(Uit), as.integer(weighted.test), 
-as.integer(index.dtimes), 
-as.integer(status), as.double(score), as.double(cumAi), as.double(cumAiiid), as.integer(residuals),
+ as.double(Ut), as.double(simUt), as.double(Uit), as.integer(weighted.test), as.integer(index.dtimes), 
+ as.integer(status), as.double(score), as.double(cumAi), as.double(cumAiiid), as.integer(residuals),
  as.integer(sym), as.integer(nph), as.integer(oh), as.integer(nPossHaps), as.double(haplo.pars), 
-as.integer(fix.beta), as.integer(fix.haplofreq), as.integer(dimzih), as.integer(dimxih), as.double(rho),
-as.double(scoregeno), as.double(d2lgeno), as.double(survscoregeno), as.integer(two.stage), as.double(varpar), 
+ as.integer(fix.beta), as.integer(fix.haplofreq), as.integer(dimzih), as.integer(dimxih), as.double(rho),
+ as.double(scoregeno), as.double(d2lgeno), as.double(survscoregeno), as.integer(two.stage), as.double(varpar), 
  as.double(d2score), as.double(step), as.double(pars), as.double(lev.marq), as.double(min.lev.marq),
- body(sdesXcheck), body(sdesZcheck),new.env(), as.double(haplo.design),as.double(alpha),
- as.integer(dimhap), as.double(haplo.freq),as.double(biid),as.double(gamiid),
- as.integer(resample.iid),PACKAGE="HaploSurvival") 
+ as.double(hapXZ$Xall), as.double(hapXZ$Zall),as.double(hapXZ$indexpers), as.double(haplo.design),as.double(alpha),
+ as.integer(dimhap), as.double(haplo.freq),as.double(biid),as.double(gamiid),as.integer(resample.iid),PACKAGE="HaploSurvival") 
   ## }}}
 } else {
   ## {{{ calling c routine for haplo-surv cox-aalen model 
+stop("Not working "); 
   nparout <- .C("haplosurvdes", 
-                as.double(times), as.integer(Ntimes), as.double(X), as.integer(nx), as.integer(px), 
-                as.double(Z), as.integer(nx), as.integer(pg), as.integer(antpers), as.double(time), 
-                as.double(time2), as.double(beta),  as.integer(Nit), as.double(cumint), as.double(vcum),
-                as.double(loglike), as.double(Iinv), as.double(Varbeta), as.integer(detail), as.integer(sim), 
-                as.integer(antsim), as.double(Rvcu), as.double(RVarbeta), as.double(test), as.double(testOBS),
-                as.double(Ut), as.double(simUt), as.double(Uit), as.integer(weighted.test), as.integer(id), 
-                as.integer(status), as.double(score), as.double(cumAi), as.double(cumAiiid), as.integer(residuals),
-                as.integer(sym), as.integer(nph), as.integer(oh), as.integer(nPossHaps), as.double(haplo.pars), 
-                as.integer(fix.beta), as.integer(fix.haplofreq), as.integer(dimzih), as.integer(dimxih), as.double(rho),
-                as.double(scoregeno), as.double(d2lgeno), as.double(survscoregeno), as.integer(two.stage), as.double(varpar), 
-                as.double(d2score), as.double(step), as.double(pars), as.double(lev.marq), as.double(min.lev.marq),
-                body(sdesXcheck), body(sdesZcheck),new.env(), as.double(haplo.design),as.double(alpha),
-                as.integer(dimhap), as.double(haplo.freq),as.double(biid),as.double(gamiid),
-                as.integer(resample.iid),PACKAGE="HaploSurvival") 
+as.double(times), as.integer(Ntimes), as.double(X), as.integer(nx), as.integer(px), 
+as.double(Z), as.integer(nx), as.integer(pg), as.integer(antpers), as.double(time), 
+as.double(time2), as.double(beta),  as.integer(Nit), as.double(cumint), as.double(vcum),
+as.double(loglike), as.double(Iinv), as.double(Varbeta), as.integer(detail), as.integer(sim), 
+as.integer(antsim), as.double(Rvcu), as.double(RVarbeta), as.double(test), as.double(testOBS),
+as.double(Ut), as.double(simUt), as.double(Uit), as.integer(weighted.test), as.integer(id), 
+as.integer(status), as.double(score), as.double(cumAi), as.double(cumAiiid), as.integer(residuals),
+as.integer(sym), as.integer(nph), as.integer(oh), as.integer(nPossHaps), as.double(haplo.pars), 
+as.integer(fix.beta), as.integer(fix.haplofreq), as.integer(dimzih), as.integer(dimxih), as.double(rho),
+as.double(scoregeno), as.double(d2lgeno), as.double(survscoregeno), as.integer(two.stage), as.double(varpar), 
+as.double(d2score), as.double(step), as.double(pars), as.double(lev.marq), as.double(min.lev.marq),
+###body(sdesXcheck), body(sdesZcheck),new.env(), as.double(haplo.design),as.double(alpha),
+as.double(hapXZ$Xall), as.double(hapXZ$Zall),as.double(hapXZ$indexpers), as.double(haplo.design),as.double(alpha),
+as.integer(dimhap), as.double(haplo.freq),as.double(biid),as.double(gamiid),as.integer(resample.iid),PACKAGE="HaploSurvival") 
   ## }}}
 }
 } else {
@@ -262,32 +335,33 @@ as.integer(sym), as.integer(nph), as.integer(oh), as.integer(nPossHaps), as.doub
 as.integer(fix.beta), as.integer(fix.haplofreq), as.integer(dimzih), as.integer(dimxih), as.double(rho),
 as.double(scoregeno), as.double(d2lgeno), as.double(survscoregeno), as.integer(two.stage), as.double(varpar), 
 as.double(d2score), as.double(step), as.double(pars), as.double(lev.marq), as.double(min.lev.marq),
-body(smdesXcheck), body(smdesZcheck),new.env(), as.double(haplo.design),as.double(alpha),
+as.double(hapXZ$Xall),as.double(hapXZ$Zall),as.double(hapXZ$indexpers),as.double(haplo.design),as.double(alpha),
+###body(smdesXcheck), body(smdesZcheck),new.env(), as.double(haplo.design),as.double(alpha),
 as.integer(dimhap), as.double(haplo.freq),as.double(biid),as.double(gamiid),
 as.integer(resample.iid),PACKAGE="HaploSurvival") 
 ## }}}
 }
 else {
 ## {{{ calling c routine for haplo match case 
+stop("Not working "); 
 nparout <- .C("haplosurvmatch", 
 as.double(times), as.integer(Ntimes), as.double(X), as.integer(nx), as.integer(px), 
 as.double(Z), as.integer(nx), as.integer(pg), as.integer(antpers), as.double(time), 
 as.double(time2), as.double(beta),  as.integer(Nit), as.double(cumint), as.double(vcum),
 as.double(loglike), as.double(Iinv), as.double(Varbeta), as.integer(detail), as.integer(sim), 
 as.integer(antsim), as.double(Rvcu), as.double(RVarbeta), as.double(test), as.double(testOBS),
-as.double(Ut), as.double(simUt), as.double(Uit), as.integer(weighted.test), 
-as.integer(id), 
+as.double(Ut), as.double(simUt), as.double(Uit), as.integer(weighted.test), as.integer(id), 
 as.integer(status), as.double(score), as.double(cumAi), as.double(cumAiiid), as.integer(residuals),
 as.integer(sym), as.integer(nph), as.integer(oh), as.integer(nPossHaps), as.double(haplo.pars), 
 as.integer(fix.beta), as.integer(fix.haplofreq), as.integer(dimzih), as.integer(dimxih), as.double(rho),
 as.double(scoregeno), as.double(d2lgeno), as.double(survscoregeno), as.integer(two.stage), as.double(varpar), 
 as.double(d2score), as.double(step), as.double(pars), as.double(lev.marq), as.double(min.lev.marq),
 body(smdesXcheck), body(smdesZcheck),new.env(), as.double(haplo.design),as.double(alpha),
-as.integer(dimhap), as.double(haplo.freq),as.double(biid),as.double(gamiid),
-as.integer(resample.iid),PACKAGE="HaploSurvival") 
+as.integer(dimhap), as.double(haplo.freq),as.double(biid),as.double(gamiid),as.integer(resample.iid),PACKAGE="HaploSurvival") 
 ## }}}
 }
 }
+
 
   ## {{{ output 
   gamma <- matrix(nparout[[53]], dimpar, 1)
@@ -344,7 +418,7 @@ as.integer(resample.iid),PACKAGE="HaploSurvival")
     robvar.hap.alpha<-RVarbeta[smed,smed]
     Iinv.hap.alpha<- Iinv[smed,smed]
     haplo.pars<-haplo.design %*% alpha; 
-    haplo.freqs = exp(c(haplo.pars,0))/sum(exp(c(haplo.pars, 0)))
+    haplo.freq = exp(c(haplo.pars,0))/sum(exp(c(haplo.pars, 0)))
   }
   else {robvar.hap.alpha<-var.hap.alpha<-var.haplo.pars<- 
           Iinv.hap.alpha<- haplo.pars<- 
@@ -372,7 +446,7 @@ as.integer(resample.iid),PACKAGE="HaploSurvival")
 
   ud <- list( cum = cumint, var.cum = vcum, robvar.cum = Rvcu,
              gamma = gamma, var.gamma = var.gamma, robvar.gamma = robvar.gamma,
-             haplo.alpha=alpha, haplo.pars=haplo.pars,haplo.freqs=haplo.freqs, 
+             haplo.alpha=alpha, haplo.pars=haplo.pars,haplo.freq=haplo.freq, 
              var.haplo.alpha=var.hap.alpha, robvar.haplo.alpha=robvar.hap.alpha,
              var.all=Varbeta, robvar.all=RVarbeta, D2linv= Iinv.gamma, 
              D2linv.haplo.alpha= Iinv.hap.alpha, D2linv.all = Iinv, 
@@ -386,7 +460,7 @@ as.integer(resample.iid),PACKAGE="HaploSurvival")
              pval.Prop = testUt, sim.supProp = sim.supUt, 
              test.procProp.all = Ut, t=Terms, 
              haplo.design=haplo.design,
-             B.iid=B.iid, gamma.iid=gamiid )
+             B.iid=B.iid, gamma.iid=gamiid,prop.odds=0)
   ## }}}
 
   ## {{{ defining names with haplostuff
@@ -454,96 +528,97 @@ as.integer(resample.iid),PACKAGE="HaploSurvival")
   return(ud)
 }
 
-haplo.freqs<- function (geno.type, geno.setup=NULL,
-                        Nit = 10, detail = 0, haplo.freq = NULL, step = 1,
-                        lev.marq=1,min.lev.marq=0,
-                        haplo.design=NULL,haplo.baseline=NULL,alpha=NULL)
-{
-  ## {{{ genostuff
-  if (is.null(geno.setup)) {
-    setup <- geno.setup(geno.type,haplo.baseline=haplo.baseline)
-  } else setup<-geno.setup
-  HPIordered <- setup$HPIordered
-  uniqueHaplos <- setup$uniqueHaploNames
-  nph<-nHaps <-length(uniqueHaplos)
-  nAllelesPerLocus <- setup$nAllelesPerLocus
-  unorderedAlleles <- setup$unorderedAlleles
-  nPeople <- antpers<- setup$nPeople
-  nLoci <- setup$nLoci
-  nPossHapPairsPerPerson <- sapply(HPIordered, length)
-  if (is.null(haplo.freq)) {
-    haplo.freq <- as.vector(table(unlist(setup$HPIordered))/sum(table(unlist(setup$HPIordered))))
-  }
-  else {
-    haplo.mass<-sum(haplo.freq);
-    haplo.freq[length(uniqueHaplos)]<-1-sum(haplo.freq[1:(length(uniqueHaplos)-1)])
-  }
 
-  rho <- NULL
-  if (is.null(rho)) {rho <- rep(0, nPeople)}
+haplo.freqs<- function (geno.type, geno.setup=NULL,
+			Nit = 10, detail = 0, haplo.freq = NULL, step = 1,
+		        lev.marq=1,min.lev.marq=0, haplo.design=NULL,haplo.baseline=NULL,alpha=NULL)
+{
+## {{{ genostuff
+if (is.null(geno.setup)) {
+setup <- geno.setup(geno.type,haplo.baseline=haplo.baseline)
+} else setup<-geno.setup
+HPIordered <- setup$HPIordered
+uniqueHaplos <- setup$uniqueHaploNames
+nph<-nHaps <-length(uniqueHaplos)
+nAllelesPerLocus <- setup$nAllelesPerLocus
+unorderedAlleles <- setup$unorderedAlleles
+nPeople <- antpers<- setup$nPeople
+nLoci <- setup$nLoci
+nPossHapPairsPerPerson <- sapply(HPIordered, length)
+if (is.null(haplo.freq)) {
+haplo.freq <- as.vector(table(unlist(setup$HPIordered))/sum(table(unlist(setup$HPIordered))))
+}
+else {
+haplo.mass<-sum(haplo.freq);
+haplo.freq[length(uniqueHaplos)]<-1-sum(haplo.freq[1:(length(uniqueHaplos)-1)])
+}
+
+rho <- NULL
+if (is.null(rho)) {rho <- rep(0, nPeople)}
 
 ###  print(nHaps); 
 ###  print(haplo.freq[1:(nHaps - 1)]/haplo.freq[nHaps])
 
-  haplo.pars<-log(haplo.freq[1:(nHaps - 1)]/haplo.freq[nHaps])
+haplo.pars<-log(haplo.freq[1:(nHaps - 1)]/haplo.freq[nHaps])
 ###  print(haplo.pars)
 
-  if (is.null(haplo.design)==TRUE)  {
-    haplo.design<-diag(nph-1) 
-    dimhap<-nph-1; alpha<-haplo.pars;   # full haplo-frequency model 
-  } else { 
-    dimhap<- ncol(haplo.design);        # haplo-freq parameters
-    init.alpha<-(t(haplo.design) %*% haplo.pars) / 
-      (t(haplo.design) %*% rep(1,nrow(haplo.design)) )
-    if (is.null(alpha)==TRUE) alpha<-init.alpha; 
-  }
-  if (is.na(sum(alpha))) cat("starting value of alpha is NA"); 
-
-  oh <- orderedHaplos <- unlist(HPIordered) -1 
-  Rho <- rho
-  LogLike <- numeric(1)
-  ## }}}
-
-  score <- numeric(dimhap); 
-  d2lgeno<- Varhap <- Iinv <- matrix(0, dimhap, dimhap)
-  score <- rep(0, dimhap)
-  iid<-matrix(0,antpers,dimhap); 
-
-  #dyn.load("genoMLE-des.so")
-
-  out <- .C("genoMLEdes", 
-            as.integer(antpers), as.integer(Nit), as.integer(detail), 
-            as.integer(nph), as.integer(oh), as.integer(nPossHapPairsPerPerson), 
-            as.double(haplo.pars), as.double(rho), as.double(score), 
-            as.double(d2lgeno), as.double(Iinv), as.double(Varhap), 
-            as.double(step), as.double(lev.marq), as.double(min.lev.marq),
-            as.double(haplo.design),as.double(alpha),as.integer(dimhap),
-            as.double(haplo.freq),as.double(iid),PACKAGE="HaploSurvival") 
-            #gsi=as.integer(genoStringIndices),
-            #nppgs=as.integer(numPeoplePerGenotypeString),
-            #ngs=as.integer(length(numPeoplePerGenotypeString)),
-            #as.double(X),as.integer(perms),as.integer(mp),as.double(alpha)) 
-
-  Varhap <- matrix(out[[12]], dimhap, dimhap)
-  score <- out[[9]]
-  haplo.pars <- out[[7]]
-  Iinv <- matrix(out[[11]], dimhap, dimhap)
-  alpha<-out[[17]]
-  iid<-matrix(out[[20]],antpers,dimhap)
-
-  haplo.pars<-haplo.design %*% alpha; 
-  haplo.freqs = exp(c(haplo.pars,0))/sum(exp(c(haplo.pars, 0)))
-
-  out<-list(haplo.alpha=alpha,haplo.pars=haplo.pars,
-            haplo.freq=haplo.freqs, 
-            var.haplo.alpha=Varhap,D2linv=Iinv,score=score,
-            haplo.design=haplo.design,alpha.iid=iid,
-            freq.names=setup$uniqueHaploNames)
-
-  attr(out, "Call") <- sys.call()
-  class(out) <- "haplo.freqs"
-  return(out)
+if (is.null(haplo.design)==TRUE)  {
+haplo.design<-diag(nph-1) 
+dimhap<-nph-1; alpha<-haplo.pars;   # full haplo-frequency model 
+} else { 
+dimhap<- ncol(haplo.design);        # haplo-freq parameters
+init.alpha<-(t(haplo.design) %*% haplo.pars) / 
+(t(haplo.design) %*% rep(1,nrow(haplo.design)) )
+if (is.null(alpha)==TRUE) alpha<-init.alpha; 
 }
+if (is.na(sum(alpha))) cat("starting value of alpha is NA"); 
+
+oh <- orderedHaplos <- unlist(HPIordered) -1 
+Rho <- rho
+LogLike <- numeric(1)
+## }}}
+
+score <- numeric(dimhap); 
+d2lgeno<- Varhap <- Iinv <- matrix(0, dimhap, dimhap)
+score <- rep(0, dimhap)
+iid<-matrix(0,antpers,dimhap); 
+
+#dyn.load("genoMLE-des.so")
+
+out <- .C("genoMLEdes", 
+as.integer(antpers), as.integer(Nit), as.integer(detail), 
+as.integer(nph), as.integer(oh), as.integer(nPossHapPairsPerPerson), 
+as.double(haplo.pars), as.double(rho), as.double(score), 
+as.double(d2lgeno), as.double(Iinv), as.double(Varhap), 
+as.double(step), as.double(lev.marq), as.double(min.lev.marq),
+as.double(haplo.design),as.double(alpha),as.integer(dimhap),
+as.double(haplo.freq),as.double(iid),PACKAGE="HaploSurvival") 
+#gsi=as.integer(genoStringIndices),
+#nppgs=as.integer(numPeoplePerGenotypeString),
+#ngs=as.integer(length(numPeoplePerGenotypeString)),
+#as.double(X),as.integer(perms),as.integer(mp),as.double(alpha)) 
+
+Varhap <- matrix(out[[12]], dimhap, dimhap)
+score <- out[[9]]
+haplo.pars <- out[[7]]
+Iinv <- matrix(out[[11]], dimhap, dimhap)
+alpha<-out[[17]]
+iid<-matrix(out[[20]],antpers,dimhap)
+
+haplo.pars<-haplo.design %*% alpha; 
+haplo.freq = exp(c(haplo.pars,0))/sum(exp(c(haplo.pars, 0)))
+
+out<-list(haplo.alpha=alpha,haplo.pars=haplo.pars,
+		haplo.freq=haplo.freq, 
+			    var.haplo.alpha=Varhap,D2linv=Iinv,score=score,
+			    haplo.design=haplo.design,alpha.iid=iid,
+					freq.names=setup$uniqueHaploNames)
+
+attr(out, "Call") <- sys.call()
+class(out) <- "haplo.freqs"
+return(out)
+}
+
 
 print.haplo.freqs <- function(x,...){
 

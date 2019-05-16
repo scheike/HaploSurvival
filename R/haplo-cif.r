@@ -64,47 +64,46 @@ covnamesX=NULL,covnamesZ=NULL){
 
 if (match==FALSE) {
 ## {{{ haplo-designs for cif
-if (fixed==0) {
-sdesXcheck<- function(x,h) {
-    out <- designfuncX(x,h)
-    if(!is.numeric(out)) stop("Need a numeric result")
-    as.double(out)
-  }
-xih<-sdesXcheck(X[1,],c(0,1))
-} else  {
+###if (fixed==0) {
+###sdesXcheck<- function(x,h) {
+###    out <- designfuncX(x,h)
+###    if(!is.numeric(out)) stop("Need a numeric result")
+###    as.double(out)
+###  }
+###xih<-sdesXcheck(X[1,],c(0,1))
+###} else  {
 sdesXcheck<- function(x,z,h) {
     out <- designfuncX(x,z,h)
     if(!is.numeric(out)) stop("Need a numeric result")
     as.double(out)
   }
 xih<-sdesXcheck(X[1,],Z[1,],c(0,1))
-}
+###}
 sdesZcheck<- function(x,z,h) {
     out <- designfuncZ(x,z,h)
     if(!is.numeric(out)) stop("Need a numeric result")
     as.double(out)
 }
-if (npar==FALSE) { zih<-sdesZcheck(X[1,],Z[1,],c(0,1));
-dimzih<-length(zih); } else dimzih<-1; 
+if (npar==FALSE) { zih<-sdesZcheck(X[1,],Z[1,],c(0,1)); dimzih<-length(zih); } else dimzih<-1; 
 dimxih<-length(xih)
 ## }}}
 } else {
 ## {{{ haplo-designs for matched cif
-if (fixed==0) {
-smdesXcheck<- function(x,hd,hp) {
-    out <- designfuncX(x,hd,hp)
-    if(!is.numeric(out)) stop("Need a numeric result")
-    as.double(out)
-  }
-xih<-smdesXcheck(X[1,],c(0,1),c(0,1))
-} else  {
+###if (fixed==0) {
+###smdesXcheck<- function(x,hd,hp) {
+###    out <- designfuncX(x,hd,hp)
+###    if(!is.numeric(out)) stop("Need a numeric result")
+###    as.double(out)
+###  }
+###xih<-smdesXcheck(X[1,],c(0,1),c(0,1))
+###} else  {
 smdesXcheck<- function(x,z,hd,hp) {
     out <- designfuncX(x,z,hd,hp)
     if(!is.numeric(out)) stop("Need a numeric result")
     as.double(out)
   }
 xih<-smdesXcheck(X[1,],Z[1,],c(0,1),c(0,1))
-}
+###}
 smdesZcheck<- function(x,z,hd,hp) {
     out <- designfuncZ(x,z,hd,hp)
     if(!is.numeric(out)) stop("Need a numeric result")
@@ -195,6 +194,16 @@ if (is.null(geno.setup)) {
   if (sum(time.pow)==0 & model=="additive") time.pow<-rep(1,dimzih); 
 ## }}}
 
+###  print(dim(X))
+###  print(dim(Z))
+
+if (match==FALSE) 
+hapXZ <- haploDes(X,Z,nPossHapPairsPerPerson,oh,dimxih,dimzih,designfuncX,designfuncZ)
+else hapXZ <- haploDesMatch(X,Z,nPossHapPairsPerPerson,oh,dimxih,dimzih,designfuncX,designfuncZ)
+
+###print(dim(hapXZ$X)); 
+###print(dim(hapXZ$Z)); 
+
 #dyn.load("haplo.so")
 if (match==FALSE) { 
 ## {{{ calling c haplocif 
@@ -215,7 +224,9 @@ if (match==FALSE) {
           as.integer(fix.haplofreq),as.double(haplo.freq),as.double(alpha.iid),
           as.integer(hapdim),
           as.integer(nph), as.integer(oh), as.integer(nPossHapPairsPerPerson),
-          body(sdesXcheck), body(sdesZcheck),new.env(),as.integer(dimxih),
+###          body(sdesXcheck), body(sdesZcheck),new.env(),
+as.double(hapXZ$Xall), as.double(hapXZ$Zall),as.double(hapXZ$indexpers), 
+	  as.integer(dimxih),
           as.integer(dimzih),as.double(haplo.design),as.integer(design.test) 
           ,PACKAGE="HaploSurvival")
 ## }}}
@@ -237,8 +248,11 @@ if (match==FALSE) {
          as.double(time.pow),as.integer(clusters),as.integer(antclust),
          as.integer(fix.haplofreq),as.double(haplo.freq),as.double(alpha.iid),
          as.integer(hapdim),as.integer(nph),as.integer(oh), 
-         as.integer(nPossHapPairsPerPerson),body(smdesXcheck),body(smdesZcheck),##15
-         new.env(),as.integer(dimxih), as.integer(dimzih),
+         as.integer(nPossHapPairsPerPerson),
+###	 body(smdesXcheck),body(smdesZcheck),##15
+as.double(hapXZ$Xall), as.double(hapXZ$Zall),as.double(hapXZ$indexpers), 
+###         new.env(),
+as.integer(dimxih), as.integer(dimzih),
          as.double(haplo.design),as.integer(design.test),PACKAGE="HaploSurvival")
 ## }}}
 }

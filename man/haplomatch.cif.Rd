@@ -139,7 +139,7 @@ setup<-geno.setup(Gbmt)
 # fits MLE under HWE 
 out<-haplo.freqs(Gbmt,geno.setup=setup) 
 
-designXM<-function(x,hd,hp) {
+designXM<-function(x,z,hd,hp) {
 hd<-round(hd); hp<-round(hp);
 match<-(hd[1]==hp[1])*(hd[2]==hp[2])
 y<-c(x,match)
@@ -150,7 +150,7 @@ designZM<-function(x,z,hd,hp) {
 hd<-round(hd); hp<-round(hp);
 match<-(hd[1]==hp[1])*(hd[2]==hp[2])
 y<-c(x,match)
-return(x)
+return(z)
 }
 
 # nonparametric additive model 

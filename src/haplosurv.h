@@ -52,7 +52,9 @@ double *score,double *hess,double *est,double *var,int *sim,int *antsim,int *ran
 double *gamma,double *vargamma,int *semi,double *zsem,int *pg,int *trans,double *gamma2,int *CA,int *line,int *detail,double *biid,
 double *gamiid,int *resample,double *timepow,int *clusters,int *antclust,
 double *haplofreq,double *alphaiid,int *hapdim,
-int *nph,int *oh,int *nphpp,SEXP designfuncX,SEXP designfuncZ,SEXP rhoR,int *dimxih,int *dimzih,double *haplodes,int *fixhaplo,int *designtest);
+int *nph,int *oh,int *nphpp,
+double *designfuncX,double *designfuncZ,int *rhoR,
+int *dimxih,int *dimzih,double *haplodes,int *fixhaplo,int *designtest);
 
 //void semihaplo(
 //times,Ntimes,x,delta,cause,KMc,z,antpers,px,Nit,
@@ -79,8 +81,9 @@ void crfitsemimatch( double *times,int *Ntimes,double *x,int *delta,int *cause,
 	double *zsem,int *pg,int *trans,double *gamma2,int *CA,
 	int *line,int *detail,double *biid, double *gamiid,int *resample,
 	double *timepow,int *clusters,int *antclust,double *haplofreq,double *alphaiid,
-	int *hapdim, int *nph,int *oh,int *nphpp,SEXP designfuncX,
-	SEXP designfuncZ,SEXP rhoR,int *dimxih,int *dimzih,double *haplodes,
+	int *hapdim, int *nph,int *oh,int *nphpp,
+double *designfuncX,double *designfuncZ,int *rhoR,
+	int *dimxih,int *dimzih,double *haplodes,
 	int *fixhaplo,int *designtest);
 //double *times,*x,*KMc,*z,*score,*hess,*est,*var,*test,*testOBS,
 //*Ut,*simUt,*gamma,*zsem,*vargamma,*gamma2,*biid,*gamiid,*timepow,

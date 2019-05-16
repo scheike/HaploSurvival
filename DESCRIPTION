@@ -1,7 +1,7 @@
 Package: HaploSurvival
-Version: 1.0-4
+Version: 1.1
 Title: Flexible surival modelling for haplotypes 
-Date: 2011-28-03
+Date: 2018-08-08
 Title: Modelling of haplo-effects for survival data, including competing risks. Effect of haplomatch for BMT studies. 
 Author: Thomas Scheike with contributions from Jeremy Silver
 Maintainer: Thomas Scheike <ts@biostat.ku.dk>

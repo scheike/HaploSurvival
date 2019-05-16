@@ -129,7 +129,7 @@ haplotypes on BMT patients, work in progress.
 }
 \author{Thomas Scheike}
 \examples{
-library(timereg)
+library(HaploSurvival)
 data(bmt); 
 times<-bmt$time[bmt$cause==1]; 
 
@@ -140,11 +140,17 @@ setup<-geno.setup(Gbmt)
 # fits MLE under HWE 
 out<-haplo.freqs(Gbmt,geno.setup=setup) 
 
-designX<-function(x,h) { 
+### must incluce Z although not relevant here 
+designX<-function(x,z,h) { 
 hh<-(h[1]==0)+(h[2]==0) # count occurrences of haplotype "0"
 y<-c(x,hh)
 return(y)
 }
+designZ<-function(x,z,h) { 
+return(z)
+}
+
+print(setup)
 
 # nonparametric additive model 
 add<-haplo.cif(Surv(time,cause>0)~platelet+age+tcell,bmt,

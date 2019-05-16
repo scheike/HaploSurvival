@@ -1,4 +1,4 @@
-* HaploSurvival for Haplotype effects for Suvival data and Competing risks 
+* HaploSurvival: Haplotype effects for Suvival data and Competing risks 
 
 Does not run currently on new version of R due to changes in R, but should run
 on older versions like R 3.0
@@ -59,10 +59,269 @@ BibTeX:
        
 ** Examples
 
-#+BEGIN_SRC R :exports both :file timereg1.png :cache yes
-  library(HaploSurvival)
-  
+Example from demo that is taken from 
+We consider the data of Ninio et al. (2004), where the aim is
+to assess the effect of the PAF-receptor gene haplotypes on
+cardiovascular death. These data are available through the
+Thesias package by Tregouet and Garelle. The haplotypes
+are defined based on five loci on the PLAG27 gene. The data
+consist of 1268 subjects and with a total of 116 deaths.
 
+#+BEGIN_QUOTE
+Platelet-activating factor-acetylhydrolase and PAF-receptor gene haplotypes in relation to future cardiovascular event in patients with coronary artery disease, Ninio, E., Tregouet, D., Carrier, J., Stengel, D., Bickel, C., Perret, C., Rupprecht, H., Cambien, F., Blankenberg, S., and Tiret, L.(2004), Human Molecular Genetics 13, 1341–1351.  
+
+Cox proportional hazards survival regression in haplotype-based association analysis using the Stochastic-EM 
+algorithm, DA Tregouet, L Tiret - European Journal of Human Genetics, 2004 - nature.com
+
+
+Thesias-package  (Tregouet and Carelle) 
+#+END_QUOTE
+
+
+
+#+BEGIN_SRC R :exports both :cache no 
+library(HaploSurvival)
+  
+data(pafah)
+geno <- as.matrix(pafah[,9:18])
+setup <- geno.setup(geno);
+
+## names of haplotypes
+setup$uniqueHaploNames
+
+setup <- geno.setup(geno,haplo.baseline="C,C,R,I,A") 
+
+out<-haplo.freqs(geno,Nit=100,geno.setup=setup,step=0.2); 
+out$haplo.freq ## approximate MLE
+print(summary(out$score))
 #+END_SRC
+
+#+RESULTS:
+#+BEGIN_example
+Loading required package: survival
+Loading required package: timereg
+ [1] "C,C,H,I,A" "C,C,H,I,V" "C,C,H,T,A" "C,C,H,T,V" "C,C,R,I,A" "C,C,R,I,V"
+ [7] "C,C,R,T,A" "C,C,R,T,V" "C,G,H,I,A" "C,G,H,I,V" "C,G,H,T,A" "C,G,H,T,V"
+[13] "C,G,R,I,A" "C,G,R,I,V" "C,G,R,T,A" "C,G,R,T,V" "T,C,H,I,A" "T,C,H,I,V"
+[19] "T,C,H,T,A" "T,C,H,T,V" "T,C,R,I,A" "T,C,R,I,V" "T,C,R,T,A" "T,C,R,T,V"
+[25] "T,G,H,I,A" "T,G,H,I,V" "T,G,H,T,A" "T,G,H,T,V" "T,G,R,I,A" "T,G,R,I,V"
+[31] "T,G,R,T,A" "T,G,R,T,V"
+ [1] 6.520014e-02 1.213874e-04 6.626509e-05 3.468848e-05 9.289504e-03
+ [6] 4.266771e-02 6.864188e-03 1.938923e-01 7.277483e-05 2.791159e-04
+[11] 1.626076e-04 6.353903e-03 1.422323e-03 3.788672e-05 3.906246e-05
+[16] 1.263164e-02 7.589413e-05 3.715934e-05 3.366666e-05 4.137389e-01
+[21] 1.768255e-01 3.072965e-03 7.136506e-05 4.797963e-05 4.319675e-05
+[26] 4.896398e-04 3.792171e-04 4.330539e-05 4.300567e-05 3.669289e-05
+[31] 3.832584e-05 6.588768e-02
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+-0.19390 -0.17770 -0.16440 -0.09009 -0.00140  0.11670
+#+END_example
+
+MLE hard to find and unstable therefore group frequencies 
+#+BEGIN_SRC R :exports both :cache no 
+
+# Let's group together all those haplotypes with an initial frequency
+# estimate less than 0.02
+guesFreq <- out$haplo.freq
+
+sum(guesFreq[-32] < 0.02) # there are 19 of these
+sum(guesFreq[-32] >= 0.02) # and 12 other haplotypes,
+
+index.small<-(1:32)[guesFreq < 0.02] # there are 26 of these
+index.small
+index.large<-(1:32)[guesFreq >= 0.02][-6] # there are 5 of these
+index.large
+
+# everything compared to C,C,R,I,A, 6 paramaters
+
+## 6 parameters, create the design matrix 
+X <- matrix(0,31,6)
+X[index.small,1]<-1; 
+k<-0; 
+for (i in index.large) 
+{
+k<-k+1; 
+X[i,(1:length(index.large))[k]+1]<-1
+}
+
+
+# haplotype names going along with permutaions 
+# largest frequency is baseline here 
+setup$uniqueHaploNames[index.small]
+setup$uniqueHaploNames[index.large]
+setup$uniqueHaploNames[32]
+
+perm.names<-c("small",setup$uniqueHaploNames[index.large])
+perm.names
+colnames(X)<-perm.names
+rownames(X)<-setup$uniqueHaploNames[-32]
+X ## design for haplotype frequencies
+
+hapfit<-haplo.freqs(geno,Nit=100,geno.setup=setup,
+		 haplo.design=X,step=0.2); 
+hapfit
+hapfit$score
+hapfit$haplo.freq ## MLE estimates for structured haplo model 
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_example
+[1] 26
+[1] 5
+ [1]  2  3  4  5  7  9 10 11 12 13 14 15 16 17 18 19 22 23 24 25 26 27 28 29 30
+[26] 31
+[1]  1  6  8 20 21
+ [1] "C,C,H,I,V" "C,C,H,T,A" "C,C,H,T,V" "C,C,R,I,V" "C,C,R,T,V" "C,G,H,I,V"
+ [7] "C,G,H,T,A" "C,G,H,T,V" "C,G,R,I,A" "C,G,R,I,V" "C,G,R,T,A" "C,G,R,T,V"
+[13] "T,C,H,I,A" "T,C,H,I,V" "T,C,H,T,A" "T,C,H,T,V" "T,C,R,T,A" "T,C,R,T,V"
+[19] "T,G,H,I,A" "T,G,H,I,V" "T,G,H,T,A" "T,G,H,T,V" "T,G,R,I,A" "T,G,R,I,V"
+[25] "T,G,R,T,A" "T,G,R,T,V"
+[1] "C,C,H,I,A" "C,C,R,T,A" "C,G,H,I,A" "T,C,R,I,A" "T,C,R,I,V"
+[1] "C,C,R,I,A"
+[1] "small"     "C,C,H,I,A" "C,C,R,T,A" "C,G,H,I,A" "T,C,R,I,A" "T,C,R,I,V"
+          small C,C,H,I,A C,C,R,T,A C,G,H,I,A T,C,R,I,A T,C,R,I,V
+C,C,H,I,A     0         1         0         0         0         0
+C,C,H,I,V     1         0         0         0         0         0
+C,C,H,T,A     1         0         0         0         0         0
+C,C,H,T,V     1         0         0         0         0         0
+C,C,R,I,V     1         0         0         0         0         0
+C,C,R,T,A     0         0         1         0         0         0
+C,C,R,T,V     1         0         0         0         0         0
+C,G,H,I,A     0         0         0         1         0         0
+C,G,H,I,V     1         0         0         0         0         0
+C,G,H,T,A     1         0         0         0         0         0
+C,G,H,T,V     1         0         0         0         0         0
+C,G,R,I,A     1         0         0         0         0         0
+C,G,R,I,V     1         0         0         0         0         0
+C,G,R,T,A     1         0         0         0         0         0
+C,G,R,T,V     1         0         0         0         0         0
+T,C,H,I,A     1         0         0         0         0         0
+T,C,H,I,V     1         0         0         0         0         0
+T,C,H,T,A     1         0         0         0         0         0
+T,C,H,T,V     1         0         0         0         0         0
+T,C,R,I,A     0         0         0         0         1         0
+T,C,R,I,V     0         0         0         0         0         1
+T,C,R,T,A     1         0         0         0         0         0
+T,C,R,T,V     1         0         0         0         0         0
+T,G,H,I,A     1         0         0         0         0         0
+T,G,H,I,V     1         0         0         0         0         0
+T,G,H,T,A     1         0         0         0         0         0
+T,G,H,T,V     1         0         0         0         0         0
+T,G,R,I,A     1         0         0         0         0         0
+T,G,R,I,V     1         0         0         0         0         0
+T,G,R,T,A     1         0         0         0         0         0
+T,G,R,T,V     1         0         0         0         0         0
+A haplo.freqs object:
+  Data for 2536 people
+  Data for 5 loci
+  32 possible haplotypes
+  MLE haplotype freqs: 
+    C,C,H,I,A C,C,H,I,V C,C,H,T,A C,C,H,T,V C,C,R,I,V C,C,R,T,A ...
+        0.066     0.001     0.001     0.001     0.001     0.045 ...
+[1] -1.939864e-07 -6.264543e-08  4.325960e-09  7.789794e-08  1.917837e-07
+[6]  7.335450e-08
+ [1] 0.06562928 0.00140938 0.00140938 0.00140938 0.00140938 0.04453844
+ [7] 0.00140938 0.19066612 0.00140938 0.00140938 0.00140938 0.00140938
+[13] 0.00140938 0.00140938 0.00140938 0.00140938 0.00140938 0.00140938
+[19] 0.00140938 0.41335096 0.17801208 0.00140938 0.00140938 0.00140938
+[25] 0.00140938 0.00140938 0.00140938 0.00140938 0.00140938 0.00140938
+[31] 0.00140938 0.07115925
+#+END_example
+
+Alternatively, one can also give haplo-freqeuncies if these are know due
+to other data. 
+
+Now, we specify the regression model for the hazard of death  that is Cox-Aalen form
+\begin{align*}
+(X(h)^T \alpha(t)) \exp( Z(h)^T \beta) 
+\end{align*}
+
+Here the design may depend on haplo-types via the numeric code for the specific 
+haplo-types given in the set-up. 
+
+#+BEGIN_SRC R :exports both :cache no 
+designX<-function(x,z,h) { return(x)}
+
+designZ<-function(x,z,h) {
+h<-round(h);
+vecZ<-c()
+for (i in (c(1,6,8,20,21)-1))  # first component as baseline
+{
+vecZ<-c(vecZ,c((h[1]==i)+(h[2]==i)))
+}
+y<-c(vecZ)
+return(y)
+}
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_example
+#+END_example
+
+Now we run model that needs to be called with a covariate even if the covariates are not
+used as is the case here 
+
+#+BEGIN_SRC R :exports both :cache no 
+dummy<-rep(1,nrow(geno))
+paf1<-haplo.surv(Surv(time,status)~1+prop(dummy),data=pafah,
+designX,designZ,Nit=5,detail=0,start.time=0,n.sim=500,
+geno.type=geno,geno.setup=setup,
+haplo.freq=hapfit$haplo.freq,haplo.design=X,
+step=0.1,two.stage=1,covnamesZ=colnames(X)[-1])
+paf1$score
+summary(paf1)
+
+## effects of specific haplotype relative to other types
+## other types is a mix of the most frequent and rare types
+## somewhat strange model 
+
+plot(paf1,xlab="Time (years)",ylab="Cumulative baseline",sim.ci=2)
+par(mfrow=c(2,3))
+plot(paf1,score=1,xlab="Time (years)",ylab="Score process")
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_example
+ Warning messages:
+1: In haplo.surv(Surv(time, status) ~ 1 + prop(dummy), data = pafah,  :
+  passing an object of type 'language' to .C (arg 56) is deprecated
+2: In haplo.surv(Surv(time, status) ~ 1 + prop(dummy), data = pafah,  :
+  passing an object of type 'language' to .C (arg 57) is deprecated
+    C,C,H,I,A     C,C,R,T,A     C,G,H,I,A     T,C,R,I,A     T,C,R,I,V 
+-1.692438e-05 -1.557387e-05  2.597394e-06 -7.728295e-06  2.268724e-06 
+         <NA>          <NA>          <NA>          <NA>          <NA> 
+-8.526513e-14  1.445605e-14 -5.778570e-15  6.130308e-14  2.166063e-14 
+         <NA> 
+ 1.587735e-14
+Error in if (cox.aalen.object$prop.odds == 0) p.o <- FALSE else p.o <- TRUE : 
+  argument is of length zero
+#+END_example
+
+#+TITLE:                            HaploSurvival (for R)
+#+AUTHOR: Thomas Scheike
+#+PROPERTY: session *R*
+#+PROPERTY: cache no
+#+PROPERTY: results output 
+#+PROPERTY: wrap example 
+#+PROPERTY: exports code 
+#+PROPERTY: tangle yes 
+#+PROPERTY: comments yes
+#+OPTIONS: LaTeX:nil timestamp:t author:nil d:t
+#+STARTUP: hideall 
+# http://orgmode.org/manual/Export-options.html
+#+OPTIONS: toc:t h:4 num:nil 
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="orgmode5-ts.css">
+#+HTML_HEAD: <link rel="icon" type="image/x-icon" href="http://www.biostat.ku.dk/~ts/styles/logo.ico"/>
+#+HTML_HEAD: <style type="text/css">body { background-image: url(http://www.biostat.ku.dk/~ts/styles/sund.png); background-size:120px 95px; background-position: 2% 0.55em; }
+#+HTML_HEAD:  a.logo span { background: none; }
+#+HTML_HEAD:  th,td,tr,table th,table th,table td {
+#+HTML_HEAD:      background: rgba(240,240,240,1);         
+#+HTML_HEAD:      border: none;
+#+HTML_HEAD:  }
+#+HTML_HEAD:   body { width: 800px; text-align:justify; text-justify:inter-word; }
+#+HTML_HEAD: </style>
+#+BEGIN_HTML
+<a href="http://www.biostat.ku.dk/~ts/survival class="logo"><span></span></a>
+#+END_HTML
 
 

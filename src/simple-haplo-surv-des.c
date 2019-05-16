@@ -24,18 +24,18 @@ haplopars,fixbeta,fixhaplofreq,
 dimzih,dimxih,rho,
 scoregeno,d2lgeno, survhaploscore,
 twostage,varpar, d2score,
-step,params,lm,minlm,designfuncX,designfuncZ,rhoR,haplodes,alpha,dimhap,
-haplofreq,biid,gamiid,resample)
-SEXP designfuncX,designfuncZ,rhoR; 
+step,params,lm,minlm,
+designfuncX,designfuncZ,rhoR,
+	haplodes,alpha,dimhap,haplofreq,biid,gamiid,resample)
 double *designX,*designG,*times,*betaS,*start,*stop,*cu,*loglike,*Vbeta,*RVbeta,
        *vcu,*Rvcu,*Iinv,*test,*testOBS,*Ut,*simUt,*Uit,*scoregeno,*dhatMit,
        *dhatMitiid,*haplopars,
        *survhaploscore,*rho,*d2lgeno,*score,*varpar,*d2score,*step,*params,*lm,*minlm,
-       *haplodes,*alpha,*haplofreq,*biid,*gamiid; 
+       *haplodes,*alpha,*haplofreq,*biid,*gamiid, 
+       *designfuncX,*designfuncZ;
 int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*status,
 *retur,*sym,*fixbeta,*fixhaplofreq,
-*nph,*oh,*dimzih,*dimxih,*nphpp,*twostage,*wscore,*dimhap,*resample,
-	*idtimes;
+*nph,*oh,*dimzih,*dimxih,*nphpp,*twostage,*wscore,*dimhap,*resample,*idtimes,*rhoR;
 // }}}
 {
 
@@ -216,18 +216,31 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*status,
   malloc_mat(nallH,*dimzih,ZallH); 
   malloc_vec(nallH,ZallHbeta); 
 
+  // reading design for persons and haplotypes
+  for (c=0;c<nallH;c++) for(j=0;j<*dimxih;j++) 
+	    ME(XallH,c,j)=designfuncX[j*(nallH)+c]; 
+
+ for (c=0;c<nallH;c++) for(j=0;j<*dimzih;j++) 
+	    ME(ZallH,c,j)=designfuncZ[j*(nallH)+c]; 
+
+// print_mat(XallH); 
+// print_mat(ZallH); 
+//
+// Rprintf("%d %d %d \n",*dimxih,*dimzih,*fixhaplofreq); 
+
+
   k=0;c1=0; 
   for (i=0;i<*antpers;i++) {
    indexpersnph[i]=c1; first=0; 
-   extract_row(ldesignX,i,xi); extract_row(ldesignG,i,zi);  
 
     for (j=0;j<nphpp[i];j++) {
        haplotype[0]=oh[c1]; haplotype[1]=oh[c1+1]; 
        ph=haplofreq[oh[c1]]*haplofreq[oh[c1+1]]; 
-       FhaplodesMM(xi,zi,haplotype,xih,designfuncX,rhoR); 
-       FhaplodesMM(xi,zi,haplotype,zih,designfuncZ,rhoR); 
+//       FhaplodesMM(xi,zi,haplotype,xih,designfuncX,rhoR); 
+//       FhaplodesMM(xi,zi,haplotype,zih,designfuncZ,rhoR); 
 
        if (*detail>=4) { // print test {{{
+          extract_row(ldesignX,i,xi); extract_row(ldesignG,i,zi);  
 	  Rprintf("=======Design========================= \n"); 
           Rprintf(" %d %d %d %d \n",i,j,k,c1); 
           Rprintf(" hap1 hap2 %d %d  \n",oh[c1],oh[c1+1]);  
@@ -238,9 +251,9 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*status,
 	  Rprintf("=============================== \n"); 
        }
        // print test }}}
+       extract_row(XallH,k,xih); extract_row(ZallH,k,zih);
        VE(ZallHbeta,k)=vec_prod(zih,beta);
        RRallH[k]=exp(VE(ZallHbeta,k)); 
-       replace_row(XallH,k,xih); replace_row(ZallH,k,zih);
        if (first==0) {indexpersallH[i]=k; first=1;}
        c1+=2; k+=1; 
     }

@@ -26,15 +26,15 @@ scoregeno,d2lgeno, survhaploscore,
 twostage,varpar, d2score,
 step,params,lm,minlm,designfuncX,designfuncZ,rhoR,haplodes,alpha,dimhap,
 haplofreq,biid,gamiid,resample)
-SEXP designfuncX,designfuncZ,rhoR; 
 double *designX,*designG,*times,*betaS,*start,*stop,*cu,*loglike,*Vbeta,*RVbeta,
        *vcu,*Rvcu,*Iinv,*test,*testOBS,*Ut,*simUt,*Uit,*scoregeno,*dhatMit,
        *dhatMitiid,*haplopars,
        *survhaploscore,*rho,*d2lgeno,*score,*varpar,*d2score,*step,*params,*lm,*minlm,
-       *haplodes,*alpha,*haplofreq,*biid,*gamiid; 
+       *haplodes,*alpha,*haplofreq,*biid,*gamiid,*designfuncX,*designfuncZ;
 int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*id,*status,
 *retur,*sym,*fixbeta,*fixhaplofreq,
-*nph,*oh,*dimzih,*dimxih,*nphpp,*twostage,*wscore,*dimhap,*resample;
+*nph,*oh,*dimzih,*dimxih,*nphpp,*twostage,*wscore,*dimhap,*resample,
+*rhoR; 
 // }}}
 {
 // {{{ memory allocation 1
@@ -180,7 +180,6 @@ int *nx,*px,*ng,*pg,*antpers,*Ntimes,*Nit,*detail,*sim,*antsim,*id,*status,
       haplofreq[*nph-1]=1+haplofreq[*nph-1];
       for (j=0;j<*nph-1;j++) { haplofreq[j]=haplofreq[j]/haplofreq[*nph-1];} 
 			        haplofreq[*nph-1]=1/haplofreq[*nph-1]; 
-
   for (i=0;i<nphm1;i++)
   for(j=0;j<*dimhap;j++)  ME(hapDes,i,j)=haplodes[j*(nphm1)+i];
   }

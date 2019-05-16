@@ -15,11 +15,10 @@ timepow,clusters,antclust,fixhaplo,
 haplofreq,alphaiid,hapdim,
 nph,oh,nphpp,designfuncX,designfuncZ,rhoR,dimxih,dimzih,haplodes,designtest)
 double *times,*betaS,*x,*KMc,*z,*score,*hess,*est,*var,*test,*testOBS,
-*Ut,*simUt,*gamma,*zsem,*gamma2,*biid,*gamiid,*vargamma,*haplofreq,*alphaiid,*haplodes,*timepow;
+*Ut,*simUt,*gamma,*zsem,*gamma2,*biid,*gamiid,*vargamma,*haplofreq,*alphaiid,*haplodes,*timepow,*designfuncX,*designfuncZ;
 int *n,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 *semi,*pg,*trans,*CA,*line,*detail,*resample,*clusters,*antclust,
-*fixhaplo,*nph,*oh,*nphpp,*hapdim,*dimxih,*dimzih,*designtest;
-SEXP designfuncX,designfuncZ,rhoR; 
+*fixhaplo,*nph,*oh,*nphpp,*hapdim,*dimxih,*dimzih,*designtest,*rhoR; 
 // }}}
 {
  // {{{ variable defs 
@@ -96,6 +95,10 @@ SEXP designfuncX,designfuncZ,rhoR;
 
   malloc_mat(nallH,*dimxih,XallH); 
 
+  for (c=0;c<nallH;c++) for(j=0;j<*dimxih;j++) 
+	    ME(XallH,c,j)=designfuncX[j*(nallH)+c]; 
+
+
   // head_matrix(XallH); head_matrix(ZallH); 
   // print_matrix(XallH); print_matrix(ZallH); 
   
@@ -115,7 +118,7 @@ SEXP designfuncX,designfuncZ,rhoR;
 
          haplotypeP[0]=oh[c1P]; haplotypeP[1]=oh[c1P+1]; 
 
-         haplodesignM(xi,haplotypeD,haplotypeP,xih,designfuncX,rhoR);; 
+//         haplodesignM(xi,haplotypeD,haplotypeP,xih,designfuncX,rhoR);; 
 
        if (*detail>=3) { // print test {{{
 	  Rprintf("======Design =================== \n"); 
@@ -132,7 +135,7 @@ SEXP designfuncX,designfuncZ,rhoR;
           Rprintf("probability for haplotype pair Patient %lf %d %d \n",phD,oh[c1P],oh[c1P+1]); 
        }
        // print test }}}
-         replace_row(XallH,k,xih); 
+//         replace_row(XallH,k,xih); 
          if (first==0) {indexpersallH[i]=k; first=1;}
          c1P+=2; k+=1; 
        }
@@ -395,11 +398,10 @@ nph,oh,nphpp,designfuncX,designfuncZ,rhoR,dimxih,dimzih,haplodes,fixhaplo,
 designtest)
 double *times,*x,*KMc,*z,*score,*hess,*est,*var,*test,*testOBS,
 *Ut,*simUt,*gamma,*zsem,*vargamma,*gamma2,*biid,*gamiid,*timepow,
-*haplofreq,*alphaiid,*haplodes;
+*haplofreq,*alphaiid,*haplodes,*designfuncX,*designfuncZ;
 int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 *semi,*pg,*trans,*CA,*line,*detail,*resample,*clusters,*antclust,
-*nph,*oh,*nphpp,*hapdim,*dimxih,*dimzih,*fixhaplo,*designtest;
-SEXP designfuncX,designfuncZ,rhoR; 
+*nph,*oh,*nphpp,*hapdim,*dimxih,*dimzih,*fixhaplo,*designtest,*rhoR; 
 // }}}
 
 {
@@ -505,6 +507,13 @@ if (fixedcov==1) {
   // head_matrix(XallH); head_matrix(ZallH); 
   // print_matrix(XallH); print_matrix(ZallH); 
   
+for (c=0;c<nallH;c++) for(j=0;j<*dimxih;j++) 
+	    ME(XallH,c,j)=designfuncX[j*(nallH)+c]; 
+
+ for (c=0;c<nallH;c++) for(j=0;j<*dimzih;j++) 
+	    ME(ZallH,c,j)=designfuncZ[j*(nallH)+c]; 
+
+
   k=0;c1D=0; 
   for (i=0;i<*n;i++) { 
    indexpersnph[i]=c1D; first=0; 
@@ -521,8 +530,8 @@ if (fixedcov==1) {
 
          haplotypeP[0]=oh[c1P]; haplotypeP[1]=oh[c1P+1]; 
 
-         haplodesignMM(xiI,ziI,haplotypeD,haplotypeP,xih,designfuncX,rhoR);; 
-         haplodesignMM(xiI,ziI,haplotypeD,haplotypeP,zih,designfuncZ,rhoR);; 
+//         haplodesignMM(xiI,ziI,haplotypeD,haplotypeP,xih,designfuncX,rhoR);; 
+//         haplodesignMM(xiI,ziI,haplotypeD,haplotypeP,zih,designfuncZ,rhoR);; 
 
        if (*detail>=3) { // print test {{{
 	  Rprintf("======Design =================== \n"); 
@@ -540,7 +549,7 @@ if (fixedcov==1) {
        }
        // print test }}}
        
-         replace_row(XallH,k,xih); replace_row(ZallH,k,zih); 
+//         replace_row(XallH,k,xih); replace_row(ZallH,k,zih); 
          if (first==0) {indexpersallH[i]=k; first=1;}
          c1P+=2; k+=1; 
        }

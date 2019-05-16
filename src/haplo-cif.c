@@ -15,11 +15,10 @@ timepow,clusters,antclust,fixhaplo,
 haplofreq,alphaiid,hapdim,
 nph,oh,nphpp,designfuncX,designfuncZ,rhoR,dimxih,dimzih,haplodes,designtest)
 double *times,*betaS,*x,*KMc,*z,*score,*hess,*est,*var,*test,*testOBS,
-*Ut,*simUt,*gamma,*zsem,*gamma2,*biid,*gamiid,*vargamma,*haplofreq,*alphaiid,*haplodes,*timepow;
+*Ut,*simUt,*gamma,*zsem,*gamma2,*biid,*gamiid,*vargamma,*haplofreq,*alphaiid,*haplodes,*timepow,*designfuncX,*designfuncZ;
 int *n,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 *semi,*pg,*trans,*CA,*line,*detail,*resample,*clusters,*antclust,
-*fixhaplo,*nph,*oh,*nphpp,*hapdim,*dimxih,*dimzih,*designtest;
-SEXP designfuncX,designfuncZ,rhoR; 
+*fixhaplo,*nph,*oh,*nphpp,*hapdim,*dimxih,*dimzih,*designtest,*rhoR; 
 // }}}
 {
  // {{{ variable defs 
@@ -97,6 +96,11 @@ if (*semi==0) {
 
   malloc_mat(nallH,*dimxih,XallH); 
 
+ // reading design for persons and haplotypes
+  for (c=0;c<nallH;c++) for(j=0;j<*dimxih;j++) 
+	    ME(XallH,c,j)=designfuncX[j*(nallH)+c]; 
+
+
   // head_matrix(XallH); head_matrix(ZallH); 
   // print_matrix(XallH); print_matrix(ZallH); 
   
@@ -110,7 +114,7 @@ if (*semi==0) {
        ph=haplofreq[oh[c1D]]*haplofreq[oh[c1D+1]]; 
        phallH[k]=ph; 
 
-       Fhaplodes(xi,haplotypeD,xih,designfuncX,rhoR);; 
+//       Fhaplodes(xi,haplotypeD,xih,designfuncX,rhoR);; 
 
        if (*detail>=3) { // print test {{{
 	  Rprintf("======Design =================== \n"); 
@@ -125,7 +129,7 @@ if (*semi==0) {
        } // }}}
      
        
-       replace_row(XallH,k,xih); 
+//       replace_row(XallH,k,xih); 
        if (first==0) {indexpersallH[i]=k; first=1;}
        c1D+=2; k+=1; 
     }
@@ -359,11 +363,10 @@ nph,oh,nphpp,designfuncX,designfuncZ,rhoR,dimxih,dimzih,haplodes,fixhaplo,
 designtest)
 double *times,*x,*KMc,*z,*score,*hess,*est,*var,*test,*testOBS,
 *Ut,*simUt,*gamma,*zsem,*vargamma,*gamma2,*biid,*gamiid,*timepow,
-*haplofreq,*alphaiid,*haplodes;
+*haplofreq,*alphaiid,*haplodes,*designfuncX,*designfuncZ; 
 int *antpers,*px,*Ntimes,*Nit,*cause,*delta,*sim,*antsim,*rani,*weighted,
 *semi,*pg,*trans,*CA,*line,*detail,*resample,*clusters,*antclust,
-*nph,*oh,*nphpp,*hapdim,*dimxih,*dimzih,*fixhaplo,*designtest;
-SEXP designfuncX,designfuncZ,rhoR; 
+*nph,*oh,*nphpp,*hapdim,*dimxih,*dimzih,*fixhaplo,*designtest,*rhoR; 
 // }}}
 
 {
@@ -450,6 +453,14 @@ if (fixedcov==1) {
   malloc_mat(nallH,*dimxih,XallH); 
   malloc_mat(nallH,*dimzih,ZallH); 
 
+ // reading design for persons and haplotypes
+  for (c=0;c<nallH;c++) for(j=0;j<*dimxih;j++) 
+	    ME(XallH,c,j)=designfuncX[j*(nallH)+c]; 
+
+ for (c=0;c<nallH;c++) for(j=0;j<*dimzih;j++) 
+	    ME(ZallH,c,j)=designfuncZ[j*(nallH)+c]; 
+
+
   // head_matrix(XallH); head_matrix(ZallH); 
   // print_matrix(XallH); print_matrix(ZallH); 
   
@@ -464,8 +475,8 @@ if (fixedcov==1) {
        ph=haplofreq[oh[c1D]]*haplofreq[oh[c1D+1]]; 
        phallH[k]=ph; 
 
-       FhaplodesMM(xiI,ziI,haplotypeD,xih,designfuncX,rhoR);; 
-       FhaplodesMM(xiI,ziI,haplotypeD,zih,designfuncZ,rhoR); 
+//       FhaplodesMM(xiI,ziI,haplotypeD,xih,designfuncX,rhoR);; 
+//       FhaplodesMM(xiI,ziI,haplotypeD,zih,designfuncZ,rhoR); 
 
        if (*detail>=3) { // print test {{{
 	  Rprintf("======Design =================== \n"); 
@@ -479,8 +490,8 @@ if (fixedcov==1) {
           Rprintf("probability for haplotype pair Donor %lf %d %d \n",ph,oh[c1D],oh[c1D+1]); 
        } // }}}
        
-       replace_row(XallH,k,xih); 
-       replace_row(ZallH,k,zih); 
+//       replace_row(XallH,k,xih); 
+//       replace_row(ZallH,k,zih); 
        if (first==0) {indexpersallH[i]=k; first=1;}
        c1D+=2; k+=1; 
     }
