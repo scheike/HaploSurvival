@@ -281,27 +281,25 @@ plot(paf1,score=1,xlab="Time (years)",ylab="Score process")
 #+RESULTS:
 #+BEGIN_example
     C,C,H,I,A     C,C,R,T,A     C,G,H,I,A     T,C,R,I,A     T,C,R,I,V 
--1.687520e-05 -1.555283e-05  2.623655e-06 -7.648404e-06  2.204360e-06
+-1.509903e-14  2.873257e-13  1.249001e-14 -3.509415e-13  4.348188e-13
 Cox-Aalen Model 
-
-Did not converge, allow more iterations
 
 Test for Aalen terms 
 Test for nonparametric terms 
 
 Test for non-significant effects 
             Supremum-test of significance p-value H_0: B(t)=0
-(Intercept)                          3.64                   0
+(Intercept)                          3.64               0.002
 
 Test for time invariant effects 
                   Kolmogorov-Smirnov test p-value H_0:constant effect
-(Intercept)                        0.0231                       0.002
+(Intercept)                        0.0231                           0
 
 Proportional Cox terms :  
              Coef.    SE Robust SE D2log(L)^-1        z  P-val lower2.5%
-C,C,H,I,A -0.07870 0.251     0.250       0.243 -0.31500 0.7530    -0.571
-C,C,R,T,A -0.70700 0.370     0.369       0.366 -1.92000 0.0554    -1.430
-C,G,H,I,A -0.00121 0.177     0.177       0.183 -0.00685 0.9950    -0.348
+C,C,H,I,A -0.07890 0.251     0.250       0.243 -0.31500 0.7530    -0.571
+C,C,R,T,A -0.70700 0.370     0.369       0.366 -1.92000 0.0553    -1.430
+C,G,H,I,A -0.00118 0.177     0.177       0.183 -0.00665 0.9950    -0.348
 T,C,R,I,A  0.10100 0.154     0.155       0.160  0.65100 0.5150    -0.201
 T,C,R,I,V  0.04420 0.177     0.177       0.181  0.24900 0.8030    -0.303
           upper97.5%
@@ -312,11 +310,11 @@ T,C,R,I,A     0.4030
 T,C,R,I,V     0.3910
 Test of Proportionality 
           sup|  hat U(t) | p-value H_0 
-C,C,H,I,A             2.94        0.820
-C,C,R,T,A             1.60        0.798
-C,G,H,I,A             5.83        0.584
-T,C,R,I,A            12.20        0.094
-T,C,R,I,V             8.74        0.156
+C,C,H,I,A             2.94        0.824
+C,C,R,T,A             1.51        0.832
+C,G,H,I,A             5.57        0.660
+T,C,R,I,A            12.40        0.100
+T,C,R,I,V             8.74        0.164
 #+END_example
 
 #+TITLE:                            HaploSurvival (for R)
